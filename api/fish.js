@@ -6,7 +6,7 @@ export default async function handler(req,res){
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        "Authorization":"Bearer " + process.env.FISH_KEY
+        "Authorization":"Bearer " + process.env.64c395adf3154cf18b128dda6cb85257
       },
       body:JSON.stringify({ input:text, voice, format })
     });
