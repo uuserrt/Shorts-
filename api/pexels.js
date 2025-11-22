@@ -4,7 +4,7 @@ export default async function handler(req,res){
 
     const r = await fetch(
       "https://api.pexels.com/videos/search?query="+encodeURIComponent(query)+"&per_page="+per_page,
-      { headers:{ Authorization: process.env.PEXELS_KEY } }
+      { headers:{ Authorization: process.env.GPVnLDWftktgFWS5KWV99kfaLQcI2bcgtiPKmSx2gO1FLgVDVb6378aF } }
     );
 
     const j = await r.json();
