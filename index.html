@@ -1,255 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Auto 15s Shorts — Auto-run</title>
+<meta charset="UTF-8">
+<title>Auto Shorts Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body{font-family:Inter, Arial, sans-serif;background:#f6f8fb;padding:18px;color:#0b1220}
-  .box{background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(12,18,34,0.04)}
-  input,textarea,button{width:100%;padding:10px;border-radius:8px;border:1px solid #e8eef8;margin-top:8px}
-  button{background:#0b69ff;color:#fff;border:none;cursor:pointer;padding:12px;border-radius:8px}
-  video{width:100%;border-radius:10px;display:none;margin-top:8px}
-  a{display:none;margin-top:8px;color:#0b69ff}
-  .small{font-size:0.9rem;color:#556}
-  .log{white-space:pre-line;background:#071018;color:#9ff7a0;padding:10px;border-radius:8px;min-height:80px;overflow:auto}
+body {
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  padding: 20px;
+}
+.box {
+  background: #222;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+input, button, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: none;
+}
+button {
+  background: #00aaff;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+}
+button:hover {
+  background: #0088cc;
+}
+#log {
+  background: #000;
+  padding: 15px;
+  border-radius: 8px;
+  height: 200px;
+  overflow-y: auto;
+  white-space: pre-line;
+  border: 1px solid #333;
+}
+video {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 8px;
+}
 </style>
 </head>
+
 <body>
-  <h2>Auto 15s Shorts — Fully Automatic (No keys)</h2>
 
-  <div class="box">
-    <label class="small">(Optional) Topic — leave empty to auto-use "Discipline"</label>
-    <input id="topic" placeholder="Optional: type a topic (e.g., Discipline)">
-    <div class="small">If you enter a topic quickly and reload the page, that topic will be used. Otherwise default used.</div>
-  </div>
+<h2>🔥 AUTO SHORTS MAKER (AI + STOCK + TTS + SUBTITLES)</h2>
 
-  <div class="box">
-    <h4>Status</h4>
-    <div id="status" class="log">Waiting to auto-run...</div>
-  </div>
+<div class="box">
+  <label>Enter Topic:</label>
+  <input id="topic" placeholder="Example: Discipline, Focus, Success...">
+  <button onclick="generateShort()">🎬 Generate Short</button>
+</div>
 
-  <div class="box">
-    <h4>Preview & Download</h4>
-    <video id="preview" controls playsinline></video>
-    <a id="downloadLink" download="shorts_auto.webm">⬇ Download Video</a>
-  </div>
+<h3>📢 Logs:</h3>
+<div id="log">Waiting...</div>
+
+<h3>🎥 Video Preview:</h3>
+<video id="preview" controls></video>
+
+<a id="download" style="color:#00eaff;font-size:18px;" download>⬇ Download Video</a>
 
 <script>
-/* -------------------------
-  Auto-run flow:
-  1) Generate script (local)
-  2) Create ambient music via WebAudio
-  3) Build canvas video for 15s, burn subtitles
-  4) Auto-preview + download shown
----------------------------*/
-
-const statusEl = document.getElementById('status');
-function log(s){ statusEl.innerText = new Date().toLocaleTimeString() + ' — ' + s + '\\n' + statusEl.innerText; }
-
-function autoTopic(){ const t = document.getElementById('topic').value.trim(); return t || 'Discipline'; }
-
-// Simple 15s script generator (automatic)
-function autoGenerateScript(topic){
-  const lines = [
-    `${topic} is not a choice — it's your routine.`,
-    `Stop excuses; start ${topic} now.`,
-    `Consistency > talent. Keep going.`,
-    `Small steps every day build success.`,
-    `Your future self will thank you.`
-  ];
-  return lines.join('\\n');
+function log(msg){
+  document.getElementById('log').innerText += "\n" + msg;
 }
 
-/* create simple ambient background audio as ArrayBuffer via WebAudio oscillator mix */
-async function createAmbientAudio(durationMs = 15000){
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  const ac = new AudioCtx();
-  const sampleRate = ac.sampleRate;
-  const length = Math.ceil(sampleRate * (durationMs/1000));
-  const offline = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, length, sampleRate);
+async function generateShort(){
+  document.getElementById('log').innerText = "Starting...\n";
+  const topic = document.getElementById('topic').value.trim();
+  if(!topic){ log("❌ Topic required"); return; }
 
-  // create two oscillators with slow LFO to make ambient pad
-  const o1 = offline.createOscillator();
-  o1.type = 'sine'; o1.frequency.value = 110; // base
-  const g1 = offline.createGain(); g1.gain.value = 0.12;
-  o1.connect(g1).connect(offline.destination);
+  log("✏ Generating script...");
+  const script = `Discipline makes you unstoppable.
+अब मेहनत शुरू करो।
+${topic} creates success.`
 
-  const o2 = offline.createOscillator();
-  o2.type = 'sine'; o2.frequency.value = 220;
-  const g2 = offline.createGain(); g2.gain.value = 0.08;
-  o2.connect(g2).connect(offline.destination);
+  log("📜 Script ready:\n" + script);
 
-  // slow filter sweep
-  const filter = offline.createBiquadFilter();
-  filter.type = 'lowpass'; filter.frequency.value = 800;
-  g1.connect(filter); g2.connect(filter); filter.connect(offline.destination);
+  log("🎤 Generating Audio...");
+  const ttsRes = await fetch("/api/fish", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ text: script })
+  });
 
-  o1.start(0); o2.start(0);
+  const ttsJSON = await ttsRes.json();
+  if(!ttsJSON.audio){ log("❌ Audio generation failed"); return; }
 
-  const rendered = await offline.startRendering();
-  // convert AudioBuffer to WAV-like ArrayBuffer (simple PCM16 WAV)
-  const channelData = rendered.getChannelData(0);
-  const buffer = new ArrayBuffer(44 + channelData.length * 2);
-  const view = new DataView(buffer);
+  log("📦 Audio created");
 
-  // RIFF header
-  function writeString(view, offset, string){
-    for(let i=0;i<string.length;i++) view.setUint8(offset + i, string.charCodeAt(i));
-  }
-  writeString(view, 0, 'RIFF');
-  view.setUint32(4, 36 + channelData.length*2, true);
-  writeString(view, 8, 'WAVE');
-  writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(view, 36, 'data');
-  view.setUint32(40, channelData.length * 2, true);
+  log("🎥 Fetching Stock Clips...");
+  const pexelsRes = await fetch("/api/pexels?query=" + topic);
+  const pexelsJSON = await pexelsRes.json();
 
-  // PCM samples
-  let offset = 44;
-  for(let i=0;i<channelData.length;i++){
-    let s = Math.max(-1, Math.min(1, channelData[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-    offset += 2;
-  }
-  // create blob
-  const blob = new Blob([view], { type: 'audio/wav' });
-  ac.close && ac.close();
-  return blob;
-}
+  if(!pexelsJSON.videos){ log("❌ No clips found"); return; }
 
-/* Build the video automatically */
-async function autoBuildAndDownload(){
-  try{
-    log('Starting automatic flow...');
-    const topic = autoTopic();
-    log('Topic: ' + topic);
-    const script = autoGenerateScript(topic);
-    log('Script generated.');
+  log("🎬 Clips found: " + pexelsJSON.videos.length);
 
-    // create ambient audio
-    log('Generating ambient audio (this may take 1-2s)...');
-    const audioBlob = await createAmbientAudio(15000);
-    log('Ambient audio ready (' + Math.round(audioBlob.size/1024) + ' KB)');
+  log("🛠 Submitting Final Render...");
+  const renderRes = await fetch("/api/render", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      script: script,
+      audio: ttsJSON.audio,
+      clips: pexelsJSON.videos
+    })
+  });
 
-    // prepare canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = 720; canvas.height = 1280;
-    const ctx = canvas.getContext('2d');
+  const renderJSON = await renderRes.json();
+  if(!renderJSON.job){ log("❌ Render submit failed"); return; }
 
-    // prepare audio + canvas stream
-    const audioURL = URL.createObjectURL(audioBlob);
-    const audioEl = document.createElement('audio');
-    audioEl.src = audioURL; audioEl.crossOrigin = 'anonymous'; audioEl.loop = false;
+  log("📡 Render Started: " + renderJSON.job);
 
-    // Wait user gesture? Some browsers block autoplay — attempt to play
-    try{ await audioEl.play(); audioEl.pause(); }catch(e){ /* ignore autoplay block */ }
+  let final = null;
 
-    // create MediaElementAudioSource -> destination so we can add to canvas stream
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const ac = new AudioCtx();
-    const source = ac.createMediaElementSource(audioEl);
-    const gainNode = ac.createGain(); gainNode.gain.value = 0.25;
-    source.connect(gainNode).connect(ac.destination);
+  while(true){
+    const jobRes = await fetch("/api/job?id=" + renderJSON.job);
+    const jobJSON = await jobRes.json();
 
-    // create destination for recording
-    const dest = ac.createMediaStreamDestination();
-    source.connect(dest);
+    log("⏳ Status: " + jobJSON.status);
 
-    const canvasStream = canvas.captureStream(30);
-    // add audio tracks
-    dest.stream.getAudioTracks().forEach(t => canvasStream.addTrack(t));
-
-    // recorder
-    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
-    const recorder = new MediaRecorder(canvasStream, { mimeType: mime });
-    const chunks = [];
-    recorder.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const preview = document.getElementById('preview');
-      preview.src = url; preview.style.display = 'block';
-      const dl = document.getElementById('downloadLink'); dl.href = url; dl.style.display = 'inline-block';
-      log('Video ready — preview + download available.');
-      // cleanup
-      try{ ac.close(); }catch(e){}
-    };
-
-    // start audio & recorder
-    await audioEl.play().catch(()=>{ log('Autoplay blocked: user interaction may be required to hear audio on some browsers.'); });
-    recorder.start();
-    log('Recording started for 15s...');
-
-    // visuals: lines
-    const lines = script.split('\\n').filter(s=>s.trim());
-    const total = 15000;
-    const per = total / lines.length;
-
-    function drawScene(text, alpha){
-      ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-      ctx.globalAlpha = alpha;
-      ctx.font = '48px sans-serif';
-      wrapText(ctx, text, canvas.width/2, canvas.height/2 - 20, 640, 56);
-      ctx.globalAlpha = 1;
+    if(jobJSON.status === "done"){
+      final = jobJSON.url;
+      break;
     }
-
-    // animate per line with simple fade-in
-    for(let i=0;i<lines.length;i++){
-      const t0 = performance.now();
-      const dur = per;
-      const steps = Math.max(1, Math.floor(dur/60));
-      for(let s=0;s<steps;s++){
-        const alpha = Math.min(1, s/ (steps*0.5) );
-        drawScene(lines[i], alpha);
-        await new Promise(r=>setTimeout(r, Math.max(16, Math.floor(dur/steps))));
-      }
-      // ensure fully visible last small part
-      drawScene(lines[i],1);
+    if(jobJSON.status === "error"){
+      log("❌ Render Error");
+      return;
     }
-
-    // stop after total ms (allow small tail)
-    setTimeout(()=>{
-      try{ recorder.stop(); audioEl.pause(); }catch(e){}
-    }, total + 200);
-
-  }catch(err){
-    console.error(err);
-    log('Error: ' + (err.message||err));
+    await new Promise(r => setTimeout(r, 3000));
   }
-}
 
-/* wrapText helper */
-function wrapText(ctx, text, x, y, maxWidth, lineHeight){
-  const words = text.split(' ');
-  let line = '';
-  for(let n=0;n<words.length;n++){
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if(testWidth > maxWidth && n>0){
-      ctx.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
-}
+  log("✅ Render Finished");
 
-/* Auto-run on load after small timeout so user can cancel if desired */
-window.addEventListener('load', ()=>{
-  log('Page loaded — automatic build will start in 800ms. To use a custom topic: type it now in the Topic field BEFORE auto-run.');
-  setTimeout(()=> autoBuildAndDownload(), 800);
-});
+  const video = document.getElementById("preview");
+  video.src = final;
+
+  const dl = document.getElementById("download");
+  dl.href = final;
+  dl.innerText = "⬇ Download Ready Video";
+
+  log("🎉 Video Ready");
+}
 </script>
+
 </body>
 </html>
